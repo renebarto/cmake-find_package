@@ -1,43 +1,68 @@
-#.rst:
-# FindWaylandProtocols
-# -------
+# - Try to find wayland-protocols
 #
-# Find wayland protocol description files
+# Copyright (C) 2017 Rene Barto
 #
-# Try to find wayland protocol files. The following values are defined
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
-# ::
+# Will be defined:
+# WAYLAND_PROTOCOLS_FOUND
+# WAYLAND_PROTOCOLS_PATH
 #
-#   WAYLANDPROTOCOLS_FOUND         - True if wayland protocol files are available
-#   WAYLANDPROTOCOLS_PATH          - Path to wayland protocol files
-#
-#=============================================================================
-#
-# Copyright (c) 2017 Rene Barto
-#
-# Based on:
-# Copyright (c) 2015 Jari Vetoniemi
-#
-# Distributed under the OSI-approved BSD License (the "License");
-#
-# This software is distributed WITHOUT ANY WARRANTY; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the License for more information.
-#=============================================================================
-
-include(FeatureSummary)
-set_package_properties(WaylandProtocols PROPERTIES
-        URL "https://cgit.freedesktop.org/wayland/wayland-protocols"
-        DESCRIPTION "Wayland protocol development")
-
-unset(WAYLAND_PROTOCOLS_PATH)
 
 find_package(PkgConfig)
-if (PKG_CONFIG_FOUND)
-    execute_process(COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=pkgdatadir wayland-protocols
-            OUTPUT_VARIABLE WAYLAND_PROTOCOLS_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
-endif ()
+pkg_check_modules(PC_WAYLAND_PROTOCOLS QUIET wayland-protocols)
+
+if(PC_WAYLAND_PROTOCOLS_FOUND)
+    if (WAYLAND_PROTOCOLS_REQUIRED_VERSION)
+        if (NOT "${WAYLAND_PROTOCOLS_REQUIRED_VERSION}" STREQUAL "${PC_WAYLAND_PROTOCOLS_VERSION}")
+            message(WARNING "Incorrect version, please install wayland-${WAYLAND_PROTOCOLS_REQUIRED_VERSION}")
+            set(WAYLAND_PROTOCOLS_FOUND_TEXT "Found incorrect version")
+            unset(PC_WAYLAND_PROTOCOLS_FOUND)
+        endif()
+    endif()
+else()
+    set(WAYLAND_PROTOCOLS_FOUND_TEXT "Not found")
+endif()
+
+if (PC_WAYLAND_PROTOCOLS_FOUND)
+    find_path(WAYLAND_PROTOCOLS_PATH NAMES
+        unstable/pointer-gestures/pointer-gestures-unstable-v1.xml
+        unstable/fullscreen-shell/fullscreen-shell-unstable-v1.xml
+        unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
+        unstable/text-input/text-input-unstable-v1.xml
+        unstable/input-method/input-method-unstable-v1.xml
+        unstable/xdg-shell/xdg-shell-unstable-v5.xml
+        unstable/xdg-shell/xdg-shell-unstable-v6.xml
+        unstable/relative-pointer/relative-pointer-unstable-v1.xml
+        unstable/pointer-constraints/pointer-constraints-unstable-v1.xml
+        unstable/tablet/tablet-unstable-v1.xml
+        unstable/tablet/tablet-unstable-v2.xml
+        unstable/xdg-foreign/xdg-foreign-unstable-v1.xml
+        unstable/idle-inhibit/idle-inhibit-unstable-v1.xml
+        PATHS ${PC_WAYLAND_PROTOCOLS_PREFIX}/share/wayland-protocols)
+    if (NOT "${WAYLAND_PROTOCOLS_PATH}" STREQUAL "")
+        set(WAYLAND_PROTOCOLS_FOUND_TEXT "Found")
+    else()
+        set(WAYLAND_PROTOCOLS_FOUND_TEXT "Not found")
+        unset(WAYLAND_PROTOCOLS_PATH)
+    endif()
+else()
+    unset(WAYLAND_PROTOCOLS_PATH)
+endif()
+
+message(STATUS "wayland-protocols: ${WAYLAND_PROTOCOLS_FOUND_TEXT}")
+message(STATUS "  version        : ${PC_WAYLAND_PROTOCOLS_VERSION}")
+message(STATUS "  prefix         : ${PC_WAYLAND_PROTOCOLS_PREFIX}")
+message(STATUS "  path           : ${WAYLAND_PROTOCOLS_PATH}")
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(WaylandProtocols DEFAULT_MSG WAYLAND_PROTOCOLS_PATH)
-mark_as_advanced(WAYLAND_PROTOCOLS_PATH)
+find_package_handle_standard_args(WAYLAND_PROTOCOLS
+    REQUIRED_VARS WAYLAND_PROTOCOLS_PATH)
+
+if (NOT WAYLAND_PROTOCOLS_FOUND)
+    message(WARNING "Could not find wayland-protocols, please install: sudo apt install bwayland-protocols")
+endif()
+
+mark_as_advanced(
+    WAYLAND_PROTOCOLS_PATH)

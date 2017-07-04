@@ -1,6 +1,11 @@
-# - Try to find gbm.
-# Once done, this will define
+# - Try to find GBM library
 #
+# Copyright (C) 2017 Rene Barto
+#
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+#
+# Will be defined:
 #  LIBGBM_INCLUDE_DIRS - the gbm include directories
 #  LIBGBM_LIBRARIES - link these to use gbm.
 #
@@ -30,17 +35,54 @@
 find_package(PkgConfig)
 pkg_check_modules(PC_LIBGBM gbm)
 
-find_path(LIBGBM_INCLUDE_DIRS
-    NAMES gbm.h
-    HINTS ${PC_LIBGBM_INCLUDE_DIRS} ${PC_LIBGBM_INCUDEDIR}
-)
+if(PC_LIBGBM_FOUND)
+    if(LIBGBM_REQUIRED_VERSION)
+        if (NOT "${LIBGBM_REQUIRED_VERSION}" STREQUAL "${PC_LIBGBM_VERSION}")
+            message(WARNING "Incorrect version, please install libgbm-${LIBGBM_REQUIRED_VERSION}")
+            set(LIBGBM_FOUND_TEXT "Found incorrect version")
+            unset(PC_LIBGBM_FOUND)
+        endif()
+    endif()
+else()
+    set(LIBGBM_FOUND_TEXT "Not found")
+endif()
 
-find_library(LIBGBM_LIBRARIES
-    NAMES gbm
-    HINTS ${PC_LIBGBM_LIBRARY_DIRS} ${PC_LIBGBM_LIBDIR}
-)
+if(PC_LIBGBM_FOUND)
+    find_path(LIBGBM_INCLUDE_DIRS NAMES gbm.h
+        HINTS ${PC_LIBGBM_INCLUDE_DIRS})
+
+    find_library(LIBGBM_LIBRARY NAMES gbm
+        HINTS ${PC_LIBGBM_LIBRARY} ${PC_LIBGBM_LIBRARY_DIRS})
+
+    if("${LIBGBM_INCLUDE_DIRS}" STREQUAL "" OR "${LIBGBM_LIBRARY}" STREQUAL "")
+        set(LIBGBM_FOUND_TEXT "Not found")
+    else()
+        set(LIBGBM_FOUND_TEXT "Found")
+    endif()
+else()
+    set(LIBGBM_FOUND_TEXT "Not found")
+endif()
+
+message(STATUS "gbm            : ${LIBGBM_FOUND_TEXT}")
+message(STATUS "  version      : ${PC_LIBGBM_VERSION}")
+message(STATUS "  cflags       : ${PC_LIBGBM_CFLAGS}")
+message(STATUS "  cflags other : ${PC_LIBGBM_CFLAGS_OTHER}")
+message(STATUS "  include dirs : ${PC_LIBGBM_INCLUDE_DIRS}")
+message(STATUS "  lib dirs     : ${PC_LIBGBM_LIBRARY_DIRS}")
+message(STATUS "  libs         : ${PC_LIBGBM_LIBRARIES}")
+
+set(LIBGBM_DEFINITIONS ${PC_LIBGBM_CFLAGS_OTHER})
+set(LIBGBM_INCLUDE_DIR ${LIBGBM_INCLUDE_DIRS})
+set(LIBGBM_LIBRARIES ${LIBGBM_LIBRARY})
+set(LIBGBM_LIBRARY_DIRS ${PC_LIBGBM_LIBRARY_DIRS})
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LIBGBM DEFAULT_MSG LIBGBM_LIBRARIES)
+find_package_handle_standard_args(LIBGBM DEFAULT_MSG
+    LIBGBM_LIBRARIES LIBGBM_INCLUDE_DIRS)
 
-mark_as_advanced(LIBGBM_INCLUDE_DIRS LIBGBM_LIBRARIES)
+if(LIBGBM_FOUND)
+else()
+    message(WARNING "Could not find libgbm, please install: sudo apt-get install libgbm-dev")
+endif()
+
+mark_as_advanced(LIBGBM_DEFINITIONS LIBGBM_INCLUDE_DIRS LIBGBM_LIBRARIES)

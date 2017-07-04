@@ -12,26 +12,29 @@
 
 MESSAGE(STATUS "Looking for GTEST")
 
-find_path(GTEST_INCLUDE_DIR 
+find_path(GTEST_INCLUDE_DIRS
           NAMES gtest/gtest.h
-          HINTS ${GTEST_ROOT}/include /usr/include /usr/local/include)
+          HINTS ${CMAKE_INSTALL_PREFIX}/include /usr/include /usr/local/include)
 
 set(GTEST_NAMES gtest)
-find_library(GTEST_LIBRARY 
+find_library(GTEST_LIBRARIES
              NAMES ${GTEST_NAMES}
-             HINTS ${GTEST_ROOT}/lib /usr/lib /usr/local/lib)
+             HINTS ${CMAKE_INSTALL_PREFIX}/lib /usr/lib /usr/local/lib)
 set(GTEST_MAIN_NAMES gtest_main)
-find_library(GTEST_LIBRARY_MAIN 
+find_library(GTEST_EXECUTABLE
              NAMES ${GTEST_MAIN_NAMES}
-             HINTS ${GTEST_ROOT}/lib /usr/lib /usr/local/lib)
+             HINTS ${CMAKE_INSTALL_PREFIX}/lib /usr/lib /usr/local/lib)
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set GTEST_FOUND to TRUE
 # if all listed variables are TRUE
-find_package_handle_standard_args(GTEST "Please install google test:\ngit clone https://github.com/google/googletest.git\ncd googletest; mkdir build; cd build\ncmake ..\nmake; sudo make install\n" GTEST_INCLUDE_DIR GTEST_LIBRARY GTEST_LIBRARY_MAIN)
+find_package_handle_standard_args(GTEST "Please install google test:\ngit clone https://github.com/google/googletest.git\ncd googletest; mkdir build; cd build\ncmake ..\nmake; sudo make install\n"
+    GTEST_INCLUDE_DIRS
+    GTEST_LIBRARIES
+    GTEST_EXECUTABLE)
 
 if(NOT GTEST_FOUND)
-    MESSAGE(FATAL_ERROR  "Could not find library Google test.")
-else()
-    set(GTEST_LIBRARIES ${GTEST_LIBRARY} ${GTEST_LIBRARY_MAIN})
+    MESSAGE(SEND_ERROR  "Could not find library Google test.")
 endif()
+
+mark_as_advanced(GTEST_INCLUDE_DIRS GTEST_LIBRARIES GTEST_EXECUTABLE)

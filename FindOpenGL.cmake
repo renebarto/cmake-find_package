@@ -1,65 +1,170 @@
-# - Try to Find OpenGL
-# Once done, this will define
+# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
+# file Copyright.txt or https://cmake.org/licensing for details.
+
+#.rst:
+# FindOpenGL
+# ----------
 #
-#  OPENGL_FOUND - system has OpenGL installed.
-#  OPENGL_INCLUDE_DIRS - directories which contain the OpenGL headers.
-#  OPENGL_LIBRARIES - libraries required to link against OpenGL.
-#  OPENGL_DEFINITIONS - Compiler switches required for using OpenGL.
+# FindModule for OpenGL and GLU.
 #
-# Copyright (C) 2015 Igalia S.L.
+# Result Variables
+# ^^^^^^^^^^^^^^^^
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-# 1.  Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-# 2.  Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
+# This module sets the following variables:
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND ITS CONTRIBUTORS ``AS
-# IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR ITS
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ``OPENGL_FOUND``
+#  True, if the system has OpenGL.
+# ``OPENGL_XMESA_FOUND``
+#  True, if the system has XMESA.
+# ``OPENGL_GLU_FOUND``
+#  True, if the system has GLU.
+# ``OPENGL_INCLUDE_DIR``
+#  Path to the OpenGL include directory.
+# ``OPENGL_LIBRARIES``
+#  Paths to the OpenGL and GLU libraries.
+#
+# If you want to use just GL you can use these values:
+#
+# ``OPENGL_gl_LIBRARY``
+#  Path to the OpenGL library.
+# ``OPENGL_glu_LIBRARY``
+#  Path to the GLU library.
+#
+# OSX Specific
+# ^^^^^^^^^^^^
+#
+# On OSX default to using the framework version of OpenGL. People will
+# have to change the cache values of OPENGL_glu_LIBRARY and
+# OPENGL_gl_LIBRARY to use OpenGL with X11 on OSX.
 
 
-find_package(PkgConfig)
+set(_OpenGL_REQUIRED_VARS OPENGL_gl_LIBRARY)
 
-pkg_check_modules(PC_OPENGL gl)
+if (CYGWIN)
 
-if (PC_OPENGL_FOUND)
-    set(OPENGL_DEFINITIONS ${PC_OPENGL_CFLAGS_OTHER})
+  find_path(OPENGL_INCLUDE_DIR GL/gl.h )
+  list(APPEND _OpenGL_REQUIRED_VARS OPENGL_INCLUDE_DIR)
+
+  find_library(OPENGL_gl_LIBRARY opengl32 )
+
+  find_library(OPENGL_glu_LIBRARY glu32 )
+
+elseif (WIN32)
+
+  if(BORLAND)
+    set (OPENGL_gl_LIBRARY import32 CACHE STRING "OpenGL library for win32")
+    set (OPENGL_glu_LIBRARY import32 CACHE STRING "GLU library for win32")
+  else()
+    set (OPENGL_gl_LIBRARY opengl32 CACHE STRING "OpenGL library for win32")
+    set (OPENGL_glu_LIBRARY glu32 CACHE STRING "GLU library for win32")
+  endif()
+
+elseif (APPLE)
+
+  # The OpenGL.framework provides both gl and glu
+  find_library(OPENGL_gl_LIBRARY OpenGL DOC "OpenGL library for OS X")
+  find_library(OPENGL_glu_LIBRARY OpenGL DOC
+    "GLU library for OS X (usually same as OpenGL library)")
+  find_path(OPENGL_INCLUDE_DIR OpenGL/gl.h DOC "Include for OpenGL on OS X")
+  list(APPEND _OpenGL_REQUIRED_VARS OPENGL_INCLUDE_DIR)
+
+else()
+  if (CMAKE_SYSTEM_NAME MATCHES "HP-UX")
+    # Handle HP-UX cases where we only want to find OpenGL in either hpux64
+    # or hpux32 depending on if we're doing a 64 bit build.
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+      set(_OPENGL_LIB_PATH
+        /opt/graphics/OpenGL/lib/hpux32/)
+    else()
+      set(_OPENGL_LIB_PATH
+        /opt/graphics/OpenGL/lib/hpux64/
+        /opt/graphics/OpenGL/lib/pa20_64)
+    endif()
+  elseif(CMAKE_SYSTEM_NAME STREQUAL Haiku)
+    set(_OPENGL_LIB_PATH
+      /boot/develop/lib/x86)
+    set(_OPENGL_INCLUDE_PATH
+      /boot/develop/headers/os/opengl)
+  endif()
+
+  # The first line below is to make sure that the proper headers
+  # are used on a Linux machine with the NVidia drivers installed.
+  # They replace Mesa with NVidia's own library but normally do not
+  # install headers and that causes the linking to
+  # fail since the compiler finds the Mesa headers but NVidia's library.
+  # Make sure the NVIDIA directory comes BEFORE the others.
+  #  - Atanas Georgiev <atanas@cs.columbia.edu>
+
+  find_path(OPENGL_INCLUDE_DIR GL/gl.h
+    /usr/share/doc/NVIDIA_GLX-1.0/include
+    /usr/openwin/share/include
+    /opt/graphics/OpenGL/include /usr/X11R6/include
+    ${_OPENGL_INCLUDE_PATH}
+  )
+  list(APPEND _OpenGL_REQUIRED_VARS OPENGL_INCLUDE_DIR)
+
+  find_path(OPENGL_xmesa_INCLUDE_DIR GL/xmesa.h
+    /usr/share/doc/NVIDIA_GLX-1.0/include
+    /usr/openwin/share/include
+    /opt/graphics/OpenGL/include /usr/X11R6/include
+  )
+
+  find_library(OPENGL_gl_LIBRARY
+    NAMES GL MesaGL
+    PATHS /opt/graphics/OpenGL/lib
+          /usr/openwin/lib
+          /usr/shlib /usr/X11R6/lib
+          ${_OPENGL_LIB_PATH}
+  )
+
+  unset(_OPENGL_INCLUDE_PATH)
+  unset(_OPENGL_LIB_PATH)
+
+  find_library(OPENGL_glu_LIBRARY
+    NAMES GLU MesaGLU
+    PATHS ${OPENGL_gl_LIBRARY}
+          /opt/graphics/OpenGL/lib
+          /usr/openwin/lib
+          /usr/shlib /usr/X11R6/lib
+  )
+
 endif ()
 
-find_path(OPENGL_INCLUDE_DIRS NAMES GL/gl.h
-    HINTS ${PC_OPENGL_INCLUDEDIR} ${PC_OPENGL_INCLUDE_DIRS}
-)
+if(OPENGL_gl_LIBRARY)
 
-set(OPENGL_NAMES ${OPENGL_NAMES} gl GL)
-find_library(OPENGL_LIBRARIES NAMES ${OPENGL_NAMES}
-    HINTS ${PC_OPENGL_LIBDIR} ${PC_OPENGL_LIBRARY_DIRS}
-)
+    if(OPENGL_xmesa_INCLUDE_DIR)
+      set( OPENGL_XMESA_FOUND "YES" )
+    else()
+      set( OPENGL_XMESA_FOUND "NO" )
+    endif()
 
+    set( OPENGL_LIBRARIES  ${OPENGL_gl_LIBRARY} ${OPENGL_LIBRARIES})
+    if(OPENGL_glu_LIBRARY)
+      set( OPENGL_GLU_FOUND "YES" )
+      if(NOT "${OPENGL_glu_LIBRARY}" STREQUAL "${OPENGL_gl_LIBRARY}")
+        set( OPENGL_LIBRARIES ${OPENGL_glu_LIBRARY} ${OPENGL_LIBRARIES} )
+      endif()
+    else()
+      set( OPENGL_GLU_FOUND "NO" )
+    endif()
+
+    # This deprecated setting is for backward compatibility with CMake1.4
+    set (OPENGL_LIBRARY ${OPENGL_LIBRARIES})
+
+endif()
+
+# This deprecated setting is for backward compatibility with CMake1.4
+set(OPENGL_INCLUDE_PATH ${OPENGL_INCLUDE_DIR})
+
+# handle the QUIETLY and REQUIRED arguments and set OPENGL_FOUND to TRUE if
+# all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(OPENGL DEFAULT_MSG OPENGL_INCLUDE_DIRS OPENGL_LIBRARIES)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(OpenGL REQUIRED_VARS ${_OpenGL_REQUIRED_VARS})
+unset(_OpenGL_REQUIRED_VARS)
 
-mark_as_advanced(OPENGL_INCLUDE_DIRS OPENGL_LIBRARIES)
-
-if (OPENGL_FOUND)
-    # We don't use find_package for GLX because it is part of -lGL, unlike EGL. We need to
-    # have OPENGL_INCLUDE_DIRS as part of the directories check_include_files() looks for in
-    # case OpenGL is installed into a non-standard location.
-    include(CMakePushCheckState)
-    CMAKE_PUSH_CHECK_STATE()
-    set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${OPENGL_INCLUDE_DIRS})
-    include(CheckIncludeFiles)
-    check_include_files("GL/glx.h" GLX_FOUND)
-    CMAKE_POP_CHECK_STATE()
-endif ()
+mark_as_advanced(
+  OPENGL_INCLUDE_DIR
+  OPENGL_xmesa_INCLUDE_DIR
+  OPENGL_glu_LIBRARY
+  OPENGL_gl_LIBRARY
+)

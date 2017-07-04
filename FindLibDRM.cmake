@@ -1,47 +1,70 @@
-
-# - Try to find drm.
-# Once done, this will define
+# - Try to find EGL library
 #
-#  LIBDRM_INCLUDE_DIRS - the drm include directories
-#  LIBDRM_LIBRARIES - link these to use drm.
+# Copyright (C) 2017 Rene Barto
 #
-# Copyright (C) 2015 Igalia S.L.
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-# 1.  Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-# 2.  Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND ITS CONTRIBUTORS ``AS
-# IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR ITS
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# Will be defined:
+#  LIBDRM_FOUND - System has LIBDRM
+#  LIBDRM_INCLUDE_DIRS - The LIBDRM include directories
+#  LIBDRM_LIBRARIES - The libraries needed to use LIBDRM
+#  LIBDRM_DEFINITIONS - Compiler switches required for using LIBDRM
 
 find_package(PkgConfig)
-pkg_check_modules(PC_LIBDRM libdrm)
+pkg_check_modules(PC_LIBDRM QUIET libdrm)
 
-find_path(LIBDRM_INCLUDE_DIRS
-    NAMES drm.h
-    HINTS ${PC_LIBDRM_INCLUDE_DIRS} ${PC_LIBDRM_INCUDEDIR}
-)
+if(PC_LIBDRM_FOUND)
+    if(LIBDRM_REQUIRED_VERSION)
+        if (NOT "${LIBDRM_REQUIRED_VERSION}" STREQUAL "${PC_LIBDRM_VERSION}")
+            message(WARNING "Incorrect version, please install libdrm-dev-${LIBDRM_REQUIRED_VERSION}")
+            set(LIBDRM_FOUND_TEXT "Found incorrect version")
+            unset(PC_LIBDRM_FOUND)
+        endif()
+    endif()
+else()
+    set(LIBDRM_FOUND_TEXT "Not found")
+endif()
 
-find_library(LIBDRM_LIBRARIES
-    NAMES drm
-    HINTS ${PC_LIBDRM_LIBRARY_DIRS} ${PC_LIBDRM_LIBDIR}
-)
+if(PC_LIBDRM_FOUND)
+    find_path(LIBDRM_INCLUDE_DIRS NAMES drm.h libsync.h xf86drm.h xf86drmMode.h
+        HINTS ${PC_LIBDRM_INCLUDE_DIRS})
+    list(APPEND LIBDRM_INCLUDE_DIRS ${PC_LIBDRM_INCLUDE_DIRS})
+    list(REMOVE_DUPLICATES LIBDRM_INCLUDE_DIRS)
+
+    find_library(LIBDRM_LIBRARY NAMES drm
+        HINTS ${PC_LIBDRM_LIBRARY} ${PC_LIBDRM_LIBRARY_DIRS})
+
+    if("${LIBDRM_INCLUDE_DIRS}" STREQUAL "" OR "${LIBDRM_LIBRARY}" STREQUAL "")
+        set(LIBDRM_FOUND_TEXT "Not found")
+    else()
+        set(LIBDRM_FOUND_TEXT "Found")
+    endif()
+else()
+    set(LIBDRM_FOUND_TEXT "Not found")
+endif()
+
+message(STATUS "libdrm         : ${LIBDRM_FOUND_TEXT}")
+message(STATUS "  version      : ${PC_LIBDRM_VERSION}")
+message(STATUS "  cflags       : ${PC_LIBDRM_CFLAGS}")
+message(STATUS "  cflags other : ${PC_LIBDRM_CFLAGS_OTHER}")
+message(STATUS "  include dirs : ${PC_LIBDRM_INCLUDE_DIRS}")
+message(STATUS "  include dirs : ${LIBDRM_INCLUDE_DIRS}")
+message(STATUS "  lib dirs     : ${PC_LIBDRM_LIBRARY_DIRS}")
+message(STATUS "  libs         : ${PC_LIBDRM_LIBRARIES}")
+
+set(LIBDRM_DEFINITIONS ${PC_LIBDRM_CFLAGS_OTHER})
+set(LIBDRM_INCLUDE_DIR ${LIBDRM_INCLUDE_DIRS})
+set(LIBDRM_LIBRARIES ${LIBDRM_LIBRARY})
+set(LIBDRM_LIBRARY_DIRS ${PC_LIBDRM_LIBRARY_DIRS})
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LIBDRM DEFAULT_MSG LIBDRM_LIBRARIES)
+find_package_handle_standard_args(LIBDRM DEFAULT_MSG
+    LIBDRM_LIBRARIES LIBDRM_INCLUDE_DIRS)
 
-mark_as_advanced(LIBDRM_INCLUDE_DIRS LIBDRM_LIBRARIES)
+if(LIBDRM_FOUND)
+else()
+    message(WARNING "Could not find libdrm, please install: sudo apt-get install libdrm-dev")
+endif()
+
+mark_as_advanced(LIBDRM_DEFINITIONS LIBDRM_LIBRARIES LIBDRM_INCLUDE_DIRS)

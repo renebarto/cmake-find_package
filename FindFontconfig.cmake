@@ -1,9 +1,12 @@
-# - Try to find the  Fontconfig
+# - Try to find fontconfig
+#
+# Copyright (C) 2017 Rene Barto
+#
 # Once done this will define
 #
 #  FONTCONFIG_FOUND - system has Fontconfig
 #  FONTCONFIG_INCLUDE_DIR - The include directory to use for the fontconfig headers
-#  FONTCONFIG_LIBRARIES - Link these to use FONTCONFIG
+#  FONTCONFIG_LIBRARY - Link these to use FONTCONFIG
 #  FONTCONFIG_DEFINITIONS - Compiler switches required for using FONTCONFIG
 
 # Copyright (c) 2006,2007 Laurent Montel, <montel@kde.org>
@@ -32,38 +35,57 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-if (FONTCONFIG_LIBRARIES AND FONTCONFIG_INCLUDE_DIR)
+find_package(PkgConfig)
+pkg_check_modules(PC_FONTCONFIG fontconfig)
 
-    # in cache already
-    set(FONTCONFIG_FOUND TRUE)
+if(PC_FONTCONFIG_FOUND)
+    if(FONTCONFIG_REQUIRED_VERSION)
+        if (NOT "${FONTCONFIG_REQUIRED_VERSION}" STREQUAL "${PC_FONTCONFIG_VERSION}")
+            message(WARNING "Incorrect version, please install fontconfig-${FONTCONFIG_REQUIRED_VERSION}")
+            set(FONTCONFIG_FOUND_TEXT "Found incorrect version")
+            unset(PC_FONTCONFIG_FOUND)
+        endif()
+    endif()
+else()
+    set(FONTCONFIG_FOUND_TEXT "Not found")
+endif()
 
-else (FONTCONFIG_LIBRARIES AND FONTCONFIG_INCLUDE_DIR)
+if(PC_FONTCONFIG_FOUND)
+    find_path(FONTCONFIG_INCLUDE_DIRS NAMES fontconfig/fontconfig.h
+        HINTS ${PC_FONTCONFIG_INCLUDE_DIRS} /usr/X11/include)
 
-    if (NOT WIN32)
-        # use pkg-config to get the directories and then use these values
-        # in the find_path() and find_library() calls
-        find_package(PkgConfig)
-        pkg_check_modules(PC_FONTCONFIG fontconfig)
+    find_library(FONTCONFIG_LIBRARY NAMES fontconfig
+        HINTS ${PC_FONTCONFIG_LIBRARY} ${PC_FONTCONFIG_LIBRARY_DIRS})
 
-      set(FONTCONFIG_DEFINITIONS ${PC_FONTCONFIG_CFLAGS_OTHER})
-    endif (NOT WIN32)
+    if("${FONTCONFIG_INCLUDE_DIRS}" STREQUAL "" OR "${FONTCONFIG_LIBRARY}" STREQUAL "")
+        set(FONTCONFIG_FOUND_TEXT "Not found")
+    else()
+        set(FONTCONFIG_FOUND_TEXT "Found")
+    endif()
+else()
+    set(FONTCONFIG_FOUND_TEXT "Not found")
+endif()
 
-    find_path(FONTCONFIG_INCLUDE_DIR fontconfig/fontconfig.h
-        PATHS
-        ${PC_FONTCONFIG_INCLUDEDIR}
-        ${PC_FONTCONFIG_INCLUDE_DIRS}
-        /usr/X11/include
-    )
+message(STATUS "fontconfig     : ${FONTCONFIG_FOUND_TEXT}")
+message(STATUS "  version      : ${PC_FONTCONFIG_VERSION}")
+message(STATUS "  cflags       : ${PC_FONTCONFIG_CFLAGS}")
+message(STATUS "  cflags other : ${PC_FONTCONFIG_CFLAGS_OTHER}")
+message(STATUS "  include dirs : ${PC_FONTCONFIG_INCLUDE_DIRS}")
+message(STATUS "  lib dirs     : ${PC_FONTCONFIG_LIBRARY_DIRS}")
+message(STATUS "  libs         : ${PC_FONTCONFIG_LIBRARIES}")
 
-    find_library(FONTCONFIG_LIBRARIES NAMES fontconfig
-        PATHS
-        ${PC_FONTCONFIG_LIBDIR}
-        ${PC_FONTCONFIG_LIBRARY_DIRS}
-    )
+set(FONTCONFIG_DEFINITIONS ${PC_FONTCONFIG_CFLAGS_OTHER})
+set(FONTCONFIG_INCLUDE_DIR ${FONTCONFIG_INCLUDE_DIRS})
+set(FONTCONFIG_LIBRARIES ${FONTCONFIG_LIBRARY})
+set(FONTCONFIG_LIBRARY_DIRS ${PC_FONTCONFIG_LIBRARY_DIRS})
 
-    include(FindPackageHandleStandardArgs)
-    FIND_PACKAGE_HANDLE_STANDARD_ARGS(Fontconfig DEFAULT_MSG FONTCONFIG_LIBRARIES FONTCONFIG_INCLUDE_DIR)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(FONTCONFIG DEFAULT_MSG
+    FONTCONFIG_LIBRARIES FONTCONFIG_INCLUDE_DIRS)
 
-    mark_as_advanced(FONTCONFIG_LIBRARIES FONTCONFIG_INCLUDE_DIR)
+if(FONTCONFIG_FOUND)
+else()
+    message(WARNING "Could not find fontconfig, please install: sudo apt-get install fontconfig-dev")
+endif()
 
-endif (FONTCONFIG_LIBRARIES AND FONTCONFIG_INCLUDE_DIR)
+mark_as_advanced(FONTCONFIG_DEFINITIONS FONTCONFIG_INCLUDE_DIRS FONTCONFIG_LIBRARIES)
