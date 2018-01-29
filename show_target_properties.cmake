@@ -1,4 +1,4 @@
-include (${CMAKE_SOURCE_DIR}/cmake/display_list.cmake)
+include (display_list)
 
 function(show_target_properties target)
     message(STATUS "Properties for ${target}")

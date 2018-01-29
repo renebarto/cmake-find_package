@@ -57,7 +57,7 @@ else()
 endif()
 
 if (CMAKE_VERBOSE_MAKEFILE)
-    message(STATUS "libuuid        : ${LIBUUID_DEV_FOUND_TEXT}")
+    message(STATUS "uuid           : ${LIBUUID_DEV_FOUND_TEXT}")
     message(STATUS "  version      : ${PC_LIBUUID_DEV_VERSION}")
     message(STATUS "  cflags       : ${PC_LIBUUID_DEV_CFLAGS}")
     message(STATUS "  cflags other : ${PC_LIBUUID_DEV_CFLAGS_OTHER}")
