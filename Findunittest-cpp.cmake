@@ -1,12 +1,12 @@
-# - Try to find unittest-c++
+# - Try to find unittest-cpp
 # Once done this will define
-#  UNITTEST_CPP_FOUND - System has unittest-c++
-#  UNITTEST_CPP_INCLUDE_DIRS - The unittest-c++ include directories
-#  UNITTEST_CPP_LIBRARIES - The libraries needed to use unittest-c++
+#  UNITTEST_CPP_FOUND - System has unittest-cpp
+#  UNITTEST_CPP_INCLUDE_DIRS - The unittest-cpp include directories
+#  UNITTEST_CPP_LIBRARIES - The libraries needed to use unittest-cpp
 #
 
 find_package(PkgConfig)
-pkg_check_modules(PC_UNITTEST_CPP unittest-c++)
+pkg_check_modules(PC_UNITTEST_CPP unittest-cpp)
 
 if(PC_UNITTEST_CPP_FOUND)
     if(UNITTEST_CPP_FIND_VERSION AND PC_UNITTEST_CPP_VERSION)
@@ -23,10 +23,10 @@ endif()
 if(PC_UNITTEST_CPP_FOUND)
     find_path(
         UNITTEST_CPP_INCLUDE_DIRS
-        NAMES unittest-c++/UnitTestC++.h
+        NAMES unittest-cpp/UnitTestC++.h
         HINTS ${PC_UNITTEST_CPP_INCLUDEDIR} ${PC_UNITTEST_CPP_INCLUDE_DIRS})
 
-    set(UNITTEST_CPP_LIBS unittest-c++)
+    set(UNITTEST_CPP_LIBS unittest-cpp)
     set(UNITTEST_CPP_LIBRARY )
     foreach(LIB ${UNITTEST_CPP_LIBS})
         find_library(UNITTEST_CPP_LIBRARY_${LIB} NAMES ${LIB}
@@ -44,7 +44,7 @@ else()
 endif()
 
 if (CMAKE_VERBOSE_MAKEFILE)
-    message(STATUS "unittest-c++   : ${UNITTEST_CPP_FOUND_TEXT}")
+    message(STATUS "unittest-cpp   : ${UNITTEST_CPP_FOUND_TEXT}")
     message(STATUS "  version      : ${PC_UNITTEST_CPP_VERSION}")
     message(STATUS "  cflags       : ${PC_UNITTEST_CPP_CFLAGS}")
     message(STATUS "  cflags other : ${PC_UNITTEST_CPP_CFLAGS_OTHER}")
@@ -66,7 +66,7 @@ find_package_handle_standard_args(UNITTEST_CPP DEFAULT_MSG
 
 if(UNITTEST_CPP_FOUND)
 else()
-    message(WARNING "Could not find unittest-c++")
+    message(WARNING "Could not find unittest-cpp")
 endif()
 
 mark_as_advanced(

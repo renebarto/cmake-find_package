@@ -48,7 +48,7 @@ endmacro()
 
 macro(set_build_type)
     if(CMAKE_BUILD_TYPE)
-        message(STATUS "Current build type: ${CMAKE_BUILD_TYPE}")
+        message(STATUS "Current build type      : ${CMAKE_BUILD_TYPE}")
     else()
         message(STATUS "Setting build to Debug")
         set(CMAKE_BUILD_TYPE "Debug")
