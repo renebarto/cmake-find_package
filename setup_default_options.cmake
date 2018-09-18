@@ -53,7 +53,7 @@ macro(setup_default_options)
 
         # Hack to force linker to target X64 machine when needed.
         if (${CMAKE_SIZEOF_VOID_P} EQUAL "8")
-            set(DEFINES ${DEFINES} _IA64_)
+            set(DEFINES ${DEFINES} _AMD64_)
         else ()
             set(DEFINES ${DEFINES} _X86_)
         endif ()
