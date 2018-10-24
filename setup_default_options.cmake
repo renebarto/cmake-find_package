@@ -26,7 +26,7 @@ macro(setup_default_options)
         # Important! do not keep warning 4251 4275 ignored!
         # Possibly switch warning 4505 back on
         set(FLAGS_CXX
-            /Wall /wd4061 /wd4251 /wd4275 /wd4505 /wd4514 /wd4548 /wd4571 /wd4592 /wd4625 /wd4626 /wd4710 /wd4774
+            /Wall /wd4061 /wd4251 /wd4275 /wd4435 /wd4505 /wd4514 /wd4548 /wd4571 /wd4592 /wd4625 /wd4626 /wd4710 /wd4774
             /wd4820 /wd5026 /wd5027 /WX- /EHsc /Gd /GR /sdl- /Zc:wchar_t /Zc:inline /fp:precise)
         set(FLAGS_CXX_DEBUG /Od /Gm- /ZI /RTC1 /MDd)
         set(FLAGS_CXX_RELEASE /Ox /GL /GS /Gy /Oi /MD)
@@ -41,7 +41,7 @@ macro(setup_default_options)
         set(FLAGS_C_MINSIZEREL /O1 /GL /GS /Gy /Oi /MD)
         set(FLAGS_C_RELWITHDEBINFO /O2 /GL /GS /Gy /Oi /Zi /MD)
 
-        set(DEFINES _UNICODE UNICODE _CRT_SECURE_NO_WARNINGS)
+        set(DEFINES _UNICODE UNICODE _CRT_SECURE_NO_WARNINGS _SCL_SECURE_NO_WARNINGS)
         set(DEFINES_DEBUG _DEBUG)
         set(DEFINES_RELEASE NDEBUG)
         set(DEFINES_MINSIZEREL NDEBUG)
