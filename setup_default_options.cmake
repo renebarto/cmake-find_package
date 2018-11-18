@@ -41,14 +41,14 @@ macro(setup_default_options)
         set(FLAGS_C_MINSIZEREL /O1 /GL /GS /Gy /Oi /MD)
         set(FLAGS_C_RELWITHDEBINFO /O2 /GL /GS /Gy /Oi /Zi /MD)
 
-        set(DEFINES _UNICODE UNICODE _CRT_SECURE_NO_WARNINGS _SCL_SECURE_NO_WARNINGS)
+        set(DEFINES _UNICODE UNICODE _CRT_SECURE_NO_WARNINGS _SCL_SECURE_NO_WARNINGS _WINSOCK_DEPRECATED_NO_WARNINGS)
         set(DEFINES_DEBUG _DEBUG)
         set(DEFINES_RELEASE NDEBUG)
         set(DEFINES_MINSIZEREL NDEBUG)
         set(DEFINES_RELWITHDEBINFO NDEBUG)
 
         set(PLATFORM_LIBRARIES_STATIC )
-        set(LINK_FLAGS )
+        set(LINK_FLAGS /ignore:4217)
         set(LINK_LIBRARIES )
 
         # Hack to force linker to target X64 machine when needed.
