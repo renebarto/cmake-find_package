@@ -6,6 +6,9 @@
 #
 
 find_package(PkgConfig)
+
+set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${PLATFORM_INSTALL}/lib/pkgconfig:${PLATFORM_INSTALL}/share/pkgconfig")
+message(STATUS "Search path: $ENV{PKG_CONFIG_PATH}")
 pkg_check_modules(PC_UNITTEST_CPP unittest-cpp)
 
 if(PC_UNITTEST_CPP_FOUND)
