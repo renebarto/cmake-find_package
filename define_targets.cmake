@@ -45,6 +45,31 @@ macro(display_package_variables)
     display_list("Dependencies                      : " ${PACKAGE_DEPENDENCIES} )
 endmacro()
 
+macro(define_target_library_static)
+    display_package_variables()
+
+    # add the library
+    add_library(${PACKAGE_NAME} STATIC ${PACKAGE_SOURCES} ${PACKAGE_INCLUDES_PUBLIC} ${PACKAGE_INCLUDES_PRIVATE})
+    target_link_libraries(${PACKAGE_NAME} ${PACKAGE_LIBS})
+    target_include_directories(${PACKAGE_NAME} PUBLIC ${PACKAGE_INCLUDE_DIRS})
+    target_compile_definitions(${PACKAGE_NAME} PRIVATE ${PACKAGE_COMPILER_DEFINITIONS_PRIVATE})
+    target_compile_definitions(${PACKAGE_NAME} PUBLIC ${PACKAGE_COMPILER_DEFINITIONS})
+    if (PACKAGE_BUILD_REFERENCE)
+        target_compile_definitions(${PACKAGE_NAME} PRIVATE BUILD_REFERENCE=${PACKAGE_BUILD_REFERENCE})
+    endif()
+    target_compile_options(${PACKAGE_NAME} PRIVATE ${PACKAGE_COMPILER_OPTIONS})
+
+    list_to_string(PACKAGE_LINK_OPTIONS PACKAGE_LINK_OPTIONS_STRING)
+    if (NOT "${PACKAGE_LINK_OPTIONS_STRING}" STREQUAL "")
+        set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS "${PACKAGE_LINK_OPTIONS}")
+    endif()
+    set_target_properties(${PACKAGE_NAME} PROPERTIES LINK_FLAGS "${PACKAGE_LINK_OPTIONS_STRING}")
+    set_target_properties(${PACKAGE_NAME} PROPERTIES VERSION ${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_MICRO})
+    set_target_properties(${PACKAGE_NAME} PROPERTIES SOVERSION ${PACKAGE_VERSION_MAJOR})
+    set_target_properties(${PACKAGE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
+    setup_target_properties_library(${PACKAGE_NAME})
+endmacro()
+
 macro(define_target_library_shared)
     display_package_variables()
         
